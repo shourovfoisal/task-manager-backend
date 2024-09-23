@@ -1,13 +1,18 @@
 import dotenv from "dotenv";
-import type { Express, RequestHandler } from "express";
+import type { RequestHandler } from "express";
 import express from "express";
 import jwt from "jsonwebtoken";
+import { logger } from "./middlewares/logger.js";
+import { router as authRouter } from "./routes/auth.js";
 
 dotenv.config();
 
-const app: Express = express();
+const app = express();
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(logger);
 
-const auth: RequestHandler = (req, res, next) => {
+const authorize: RequestHandler = (req, res, next) => {
   const token = req.headers["authorization"];
   const JwtSecret = process.env.JWT_SECRET;
 
@@ -27,9 +32,7 @@ const auth: RequestHandler = (req, res, next) => {
   }
 };
 
-app.get("/api/protected", auth, (req, res) => {
-  res.send("This is the protected route");
-});
+app.use("/auth", authRouter);
 
 const port = process.env.PORT ?? 3000;
 app.listen(port, () => {
